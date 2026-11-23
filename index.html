@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarketLink | Fresh Produce Marketplace</title>
+<style>
+:root{--green:#1c6b45;--light:#eaf5ee;--ink:#183329;--muted:#64756b;--line:#dce8df;--gold:#f3bd52}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6faf7;color:var(--ink)}
+header{background:var(--green);color:white;padding:18px 16px}header .wrap{max-width:1000px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{font-size:1.35rem;font-weight:800}.brand span{color:#c8f0d6}header small{opacity:.9}
+main{max-width:1000px;margin:24px auto;padding:0 14px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 4px 14px #173d2b0a}
+h1,h2,h3{margin-top:0}h1{font-size:1.45rem}h2{font-size:1.15rem}p{line-height:1.5;color:var(--muted)}
+label{display:block;font-weight:650;font-size:.9rem;margin:10px 0 5px}input,select,textarea{width:100%;padding:12px;border:1px solid #cbd9d0;border-radius:10px;font:inherit;background:white;color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.btn{border:0;background:var(--green);color:white;padding:12px 16px;border-radius:10px;font-weight:700;cursor:pointer;margin-top:12px}.btn.secondary{background:#e5f1e9;color:var(--green)}.btn.gold{background:#8a5b00}.btn:active{transform:scale(.98)}
+.hidden{display:none!important}.badge{display:inline-block;background:var(--light);color:var(--green);padding:5px 9px;border-radius:30px;font-size:.8rem;font-weight:700}
+.listing{border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0}.listing h3{margin-bottom:6px}.listing p{margin:5px 0}.notice{background:#fff8e8;border:1px solid #f3dfad;padding:12px;border-radius:10px;color:#6b500e}
+nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}nav button{padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:white;color:var(--green);font-weight:700;cursor:pointer}
+#message{margin-top:12px;font-weight:700;color:var(--green)}footer{text-align:center;padding:24px;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="brand">🌱 Market<span>Link</span></div><small>Local produce. Direct connection.</small></div></header>
+<main>
+<section class="panel" id="registration">
+<h1>Welcome to MarketLink</h1><p>Connect buyers with nearby farmers and fresh-produce sellers.</p>
+<form id="registerForm">
+<div class="grid">
+<div><label>Full name</label><input id="name" required placeholder="Your name"></div>
+<div><label>Phone number</label><input id="phone" required type="tel" placeholder="e.g. 099..."></div>
+<div><label>District</label><input id="district" required placeholder="Your district"></div>
+<div><label>Area / village</label><input id="area" required placeholder="Your area"></div>
+</div>
+<label>I want to join as</label><select id="role"><option value="buyer">Buyer</option><option value="seller">Seller</option></select>
+<button class="btn" type="submit">Register & Continue</button>
+</form><div id="message"></div>
+</section>
+<section class="panel hidden" id="dashboard">
+<h1 id="welcome"></h1><nav><button onclick="showTab('market')">Marketplace</button><button onclick="showTab('sell')">Add Produce</button><button onclick="showTab('groups')">Group Delivery</button><button onclick="showTab('ussd')">USSD Demo</button><button onclick="logout()">Log out</button></nav>
+<div id="marketTab"><h2>Fresh produce near you</h2><div class="grid"><div><label>Search produce</label><input id="search" oninput="renderListings()" placeholder="Search tomatoes, maize..."></div><div><label>Filter district</label><input id="filterDistrict" oninput="renderListings()" placeholder="District"></div></div><div id="listingContainer"></div></div>
+<div id="sellTab" class="hidden"><h2>List your produce</h2><form id="sellForm"><div class="grid"><div><label>Produce</label><input id="produce" required placeholder="Tomatoes"></div><div><label>Quantity</label><input id="quantity" required placeholder="e.g. 5 baskets"></div><div><label>Price (MWK)</label><input id="price" required type="number" min="0" placeholder="Price"></div><div><label>Quality</label><select id="quality"><option>Fresh</option><option>Good</option><option>Mixed grade</option></select></div><div><label>Harvest date</label><input id="harvest" type="date"></div><div><label>District</label><input id="sellerDistrict" required></div></div><button class="btn">Publish listing</button></form></div>
+<div id="groupsTab" class="hidden"><h2>Shared / Group Delivery</h2><p>Buyers in nearby areas can combine orders to share transport costs.</p><div class="listing"><h3>Group order: Vegetables</h3><p>Area: Lilongwe · Target: 5 households</p><p id="groupCount">2 households joined so far</p><button class="btn" onclick="joinGroup()">Join group order</button></div></div>
+<div id="ussdTab" class="hidden"><h2>Basic-phone USSD demo</h2><div class="panel" style="background:#12291f;color:#d8f6df"><p style="color:#d8f6df">MarketLink Demo<br>1. Buy produce<br>2. Sell produce<br>3. Nearby sellers<br>4. My orders</p><label style="color:white">Choose option</label><input id="ussdChoice" type="number" min="1" max="4"><button class="btn gold" onclick="ussd()">Submit</button><div id="ussdResult" style="color:#d8f6df;margin-top:10px"></div></div></div>
+</section>
+<footer>MarketLink prototype · Demonstration only · No real payments or backend connection</footer>
+</main>
+<script>
+let user=null;let listings=[
+{produce:"Tomatoes",quantity:"10 baskets",price:"15,000",quality:"Fresh",harvest:"Today",district:"Lilongwe",seller:"Demo Farmer"},
+{produce:"Maize",quantity:"4 bags",price:"95,000",quality:"Good",harvest:"This week",district:"Dedza",seller:"Demo Seller"},
+{produce:"Leafy vegetables",quantity:"20 bundles",price:"8,000",quality:"Fresh",harvest:"Today",district:"Lilongwe",seller:"Local Vendor"}
+];
+document.getElementById("registerForm").addEventListener("submit",e=>{e.preventDefault();user={name:document.getElementById("name").value,phone:document.getElementById("phone").value,district:document.getElementById("district").value,area:document.getElementById("area").value,role:document.getElementById("role").value};document.getElementById("registration").classList.add("hidden");document.getElementById("dashboard").classList.remove("hidden");document.getElementById("welcome").textContent="Hello, "+user.name+"! "+(user.role==="buyer"?"Find fresh produce near you.":"Manage your produce listings.");document.getElementById("sellerDistrict").value=user.district;renderListings();showTab(user.role==="seller"?"sell":"market");});
+function showTab(tab){["market","sell","groups","ussd"].forEach(t=>document.getElementById(t+"Tab").classList.toggle("hidden",t!==tab));}
+function renderListings(){let s=(document.getElementById("search")?.value||"").toLowerCase(),d=(document.getElementById("filterDistrict")?.value||"").toLowerCase();let filtered=listings.filter(x=>(x.produce.toLowerCase().includes(s)||x.seller.toLowerCase().includes(s))&&x.district.toLowerCase().includes(d));document.getElementById("listingContainer").innerHTML=filtered.length?filtered.map((x,i)=>`<div class="listing"><h3>${x.produce} <span class="badge">${x.quality}</span></h3><p>Quantity: ${x.quantity} · Price: MWK ${x.price}</p><p>Harvest: ${x.harvest} · District: ${x.district}</p><p>Seller: ${x.seller}</p><button class="btn" onclick="order(${i})">Request order</button></div>`).join(""):"<p>No listings match. Try another search.</p>";}
+function order(i){alert("Demo order request sent for "+listings[i].produce+". No real order or payment was made.");}
+document.getElementById("sellForm").addEventListener("submit",e=>{e.preventDefault();listings.unshift({produce:document.getElementById("produce").value,quantity:document.getElementById("quantity").value,price:Number(document.getElementById("price").value).toLocaleString(),quality:document.getElementById("quality").value,harvest:document.getElementById("harvest").value||"Not specified",district:document.getElementById("sellerDistrict").value,seller:user.name});e.target.reset();document.getElementById("sellerDistrict").value=user.district;renderListings();alert("Your listing has been published in this demo!");showTab("market");});
+function joinGroup(){let n=2;let el=document.getElementById("groupCount");let count=Number(el.dataset.count||n)+1;el.dataset.count=count;el.textContent=count+" households joined so far";alert("You joined the demo group order!");}
+function ussd(){let c=document.getElementById("ussdChoice").value;let messages={"1":"Browse available produce: dial-in demo only.","2":"Seller registration/listing: demo menu.","3":"Nearby sellers are matched by district in this prototype.","4":"Order tracking is not connected yet."};document.getElementById("ussdResult").textContent=messages[c]||"Please choose 1, 2, 3 or 4.";}
+function logout(){document.getElementById("dashboard").classList.add("hidden");document.getElementById("registration").classList.remove("hidden");document.getElementById("registerForm").reset();user=null;}
+</script>
+</body></html>
